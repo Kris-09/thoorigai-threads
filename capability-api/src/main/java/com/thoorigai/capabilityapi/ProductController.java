@@ -6,8 +6,20 @@ import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+
 @RestController 
 public class ProductController {
+    private final SheetService sheetService;
+
+    public ProductController(SheetService sheetService) {
+        this.sheetService = sheetService;
+    }
+
+    @GetMapping("/products-raw")
+    public String getProductsRaw() throws Exception {
+        return sheetService.getProductsCsv();
+    }
+
     @GetMapping("/products")
     public List<Product> getProducts() {
         return List.of(
