@@ -12,11 +12,6 @@ public class CategoryController {
         this.sheetService = sheetService;
     }
 
-    @GetMapping("/categories-raw")
-    public String getCategoriesRaw() throws Exception {
-        return sheetService.getCategoriesCsv();
-    }
-
     @GetMapping("/categories")
     public List<Category> getCategories() throws Exception {
         return sheetService.parseCategories(sheetService.getCategoriesCsv());

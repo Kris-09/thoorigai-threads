@@ -13,11 +13,6 @@ public class ProductController {
         this.sheetService = sheetService;
     }
 
-    @GetMapping("/products-raw")
-    public String getProductsRaw() throws Exception {
-        return sheetService.getProductsCsv();
-    }
-
     @GetMapping("/products")
     public List<Product> getProducts() throws Exception {
         return sheetService.parseProducts(sheetService.getProductsCsv());
