@@ -18,13 +18,7 @@ public class CategoryController {
     }
 
     @GetMapping("/categories")
-    public List<Category> getCategories() {
-        return List.of(
-            new Category(
-                "1", "Dress"
-            ),
-            new Category(
-                "2", "Accessory"
-            ));
+    public List<Category> getCategories() throws Exception {
+        return sheetService.parseCategories(sheetService.getCategoriesCsv());
     }
 }
