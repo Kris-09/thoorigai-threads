@@ -15,7 +15,7 @@ public class ProductController {
 
     @GetMapping("/products")
     public List<Product> getProducts() throws Exception {
-        return sheetService.parseProducts(sheetService.getProductsCsv());
+        return sheetService.getProducts();
     }
 
 }

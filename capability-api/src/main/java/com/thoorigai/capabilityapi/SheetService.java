@@ -21,6 +21,11 @@ public class SheetService {
     @Value("${sheets.products-url}")
     private String productsUrl;
 
+    private List<Category> cachedCategories;
+    private long categoriesFetchedAt;
+    private List<Product> cachedProducts;
+    private long productsFetchedAt;
+
     public String fetchCsv(String address) throws Exception {
         HttpClient client = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -85,7 +90,7 @@ public class SheetService {
             for (String part : mediaParts) {
                 media.add(part.trim());
             }
-            
+
             boolean featured = Boolean.parseBoolean(row.get("featured"));
             LocalDate createdAt = LocalDate.parse(row.get("createdAt"));
 
@@ -93,5 +98,25 @@ public class SheetService {
         }
 
         return products;
+    }
+
+    public List<Category> getCategories() throws Exception {
+        long now = System.currentTimeMillis();
+        if (cachedCategories == null || now - categoriesFetchedAt > 60000) {
+            cachedCategories = parseCategories(getCategoriesCsv());
+            categoriesFetchedAt = now;
+        }
+
+        return cachedCategories;
+    }
+
+    public List<Product> getProducts() throws Exception {
+        long now = System.currentTimeMillis();
+        if (cachedProducts == null || now - productsFetchedAt > 60000) {
+            cachedProducts = parseProducts(getProductsCsv());
+            productsFetchedAt = now;
+        }
+
+        return cachedProducts;
     }
 }

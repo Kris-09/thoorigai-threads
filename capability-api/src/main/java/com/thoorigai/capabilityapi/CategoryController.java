@@ -14,6 +14,6 @@ public class CategoryController {
 
     @GetMapping("/categories")
     public List<Category> getCategories() throws Exception {
-        return sheetService.parseCategories(sheetService.getCategoriesCsv());
+        return sheetService.getCategories();
     }
 }
