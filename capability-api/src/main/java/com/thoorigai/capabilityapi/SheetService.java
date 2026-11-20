@@ -10,6 +10,8 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 
 import org.apache.commons.csv.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,8 @@ public class SheetService {
     private List<Product> cachedProducts;
     private long productsFetchedAt;
 
+    private static final Logger log = LoggerFactory.getLogger(SheetService.class);
+
     public String fetchCsv(String address) throws Exception {
         HttpClient client = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -35,8 +39,12 @@ public class SheetService {
             .uri(URI.create(address))
             .build();
 
-        HttpResponse<String> response =
-            client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Google returned status " + response.statusCode());
+        }
+
         return response.body();
     }
 
@@ -59,7 +67,14 @@ public class SheetService {
         List<Category> categories = new ArrayList<>();
 
         for (CSVRecord row : parser) {
-            categories.add(new Category(row.get("id"), row.get("name")));
+            try {
+                if (row.get("id").isBlank()) {
+                    continue;
+                }
+                categories.add(new Category(row.get("id"), row.get("name")));
+            } catch (Exception e) {
+                log.warn("Skipping category row {} because {}", row.getRecordNumber() + 1, e.getMessage());
+            }
         }
 
         return categories;
@@ -76,25 +91,35 @@ public class SheetService {
         List<Product> products = new ArrayList<>();
 
         for (CSVRecord row : parser) {
-            String id = row.get("id");
-            String name = row.get("name");
-            String description = row.get("description");
-            BigDecimal price = new BigDecimal(row.get("price"));
-            String categoryId = row.get("categoryId");
-            String size = row.get("size");
-            String color = row.get("color");
-            int quantity = Integer.parseInt(row.get("quantity"));
-            String[] mediaParts = row.get("media").split("\\|");
+            try {
+                if (row.get("id").isBlank()) {
+                    continue;
+                }
+                String id = row.get("id");
+                String name = row.get("name");
+                String description = row.get("description");
+                BigDecimal price = new BigDecimal(row.get("price"));
+                String categoryId = row.get("categoryId");
+                String size = row.get("size");
+                String color = row.get("color");
+                int quantity = Integer.parseInt(row.get("quantity"));
+                String[] mediaParts = row.get("media").split("\\|");
 
-            List<String> media = new ArrayList<>();
-            for (String part : mediaParts) {
-                media.add(part.trim());
+                List<String> media = new ArrayList<>();
+                for (String part : mediaParts) {
+                    String clean = part.trim();
+                    if (!clean.isEmpty()) {
+                        media.add(clean);
+                    }
+                }
+
+                boolean featured = Boolean.parseBoolean(row.get("featured"));
+                LocalDate createdAt = LocalDate.parse(row.get("createdAt"));
+
+                products.add(new Product(id, name, description, price, categoryId, size, color, quantity, media, featured, createdAt));
+            } catch (Exception e) {
+                log.warn("Skipping product row {} because {}", row.getRecordNumber() + 1, e.getMessage());
             }
-
-            boolean featured = Boolean.parseBoolean(row.get("featured"));
-            LocalDate createdAt = LocalDate.parse(row.get("createdAt"));
-
-            products.add(new Product(id, name, description, price, categoryId, size, color, quantity, media, featured, createdAt));
         }
 
         return products;
@@ -103,8 +128,15 @@ public class SheetService {
     public List<Category> getCategories() throws Exception {
         long now = System.currentTimeMillis();
         if (cachedCategories == null || now - categoriesFetchedAt > 60000) {
-            cachedCategories = parseCategories(getCategoriesCsv());
-            categoriesFetchedAt = now;
+            try {
+                cachedCategories = parseCategories(getCategoriesCsv());
+                categoriesFetchedAt = now;
+            } catch (Exception e) {
+                if (cachedCategories == null) {
+                    throw e;
+                }
+                log.warn("Refresh failed, using the old copy of categories: {}", e.getMessage());
+            }
         }
 
         return cachedCategories;
@@ -113,8 +145,15 @@ public class SheetService {
     public List<Product> getProducts() throws Exception {
         long now = System.currentTimeMillis();
         if (cachedProducts == null || now - productsFetchedAt > 60000) {
-            cachedProducts = parseProducts(getProductsCsv());
-            productsFetchedAt = now;
+            try {
+                cachedProducts = parseProducts(getProductsCsv());
+                productsFetchedAt = now;
+            } catch (Exception e) {
+                if (cachedProducts == null) {
+                    throw e;
+                }
+                log.warn("Refresh failed, using the old copy of products: {}", e.getMessage());
+            }
         }
 
         return cachedProducts;
