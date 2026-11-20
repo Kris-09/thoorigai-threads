@@ -73,7 +73,7 @@ public class SheetService {
                 }
                 categories.add(new Category(row.get("id"), row.get("name")));
             } catch (Exception e) {
-                log.warn("Skipping category row {} because {}", row.getRecordNumber() + 1, e.getMessage());
+                log.warn("Skipping category row {} because {}", row.getRecordNumber() + 1, e.toString());
             }
         }
 
@@ -118,7 +118,7 @@ public class SheetService {
 
                 products.add(new Product(id, name, description, price, categoryId, size, color, quantity, media, featured, createdAt));
             } catch (Exception e) {
-                log.warn("Skipping product row {} because {}", row.getRecordNumber() + 1, e.getMessage());
+                log.warn("Skipping product row {} because {}", row.getRecordNumber() + 1, e.toString());
             }
         }
 
@@ -135,7 +135,7 @@ public class SheetService {
                 if (cachedCategories == null) {
                     throw e;
                 }
-                log.warn("Refresh failed, using the old copy of categories: {}", e.getMessage());
+                log.warn("Refresh failed, using the old copy of categories: {}", e.toString());
             }
         }
 
@@ -152,7 +152,7 @@ public class SheetService {
                 if (cachedProducts == null) {
                     throw e;
                 }
-                log.warn("Refresh failed, using the old copy of products: {}", e.getMessage());
+                log.warn("Refresh failed, using the old copy of products: {}", e.toString());
             }
         }
 
