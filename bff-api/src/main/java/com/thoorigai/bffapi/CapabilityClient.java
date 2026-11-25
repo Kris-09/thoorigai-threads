@@ -40,4 +40,12 @@ public class CapabilityClient {
 
         return categories;
     }
+
+    public List<ProductIn> getProducts() throws Exception {
+        String json = fetchText("/products");
+        ObjectMapper mapper = new ObjectMapper();
+        List<ProductIn> products = mapper.readValue(json, new TypeReference<List<ProductIn>>() {});
+
+        return products;
+    }
 }
