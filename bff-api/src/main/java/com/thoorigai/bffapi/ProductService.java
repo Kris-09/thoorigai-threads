@@ -46,4 +46,17 @@ public class ProductService {
 
         return result;
     }
+
+    public List<ProductOut> getFeaturedProducts() throws Exception {
+        List<ProductOut> all = getProducts();
+        List<ProductOut> featured = new ArrayList<>();
+
+        for (ProductOut product : all) {
+            if (product.featured()) {
+                featured.add(product);
+            }
+        }
+
+        return featured;
+    }
 }

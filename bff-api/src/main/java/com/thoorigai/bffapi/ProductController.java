@@ -19,4 +19,9 @@ public class ProductController {
     public List<ProductOut> getProducts() throws Exception {
         return productService.getProducts();
     }
+
+    @GetMapping("/products/featured")
+    public List<ProductOut> getFeaturedProducts() throws Exception {
+        return productService.getFeaturedProducts();
+    }
 }
